@@ -6,9 +6,10 @@ Finds and retrieves the latest articles for a given keyword using Google News RS
 import requests
 from bs4 import BeautifulSoup
 import feedparser
-from newspaper import Article
+import html2text
 from typing import List, Dict
 import logging
+import re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ class ArticleScraper:
 
     def extract_article_content(self, url: str) -> Dict:
         """
-        Extract full article content from URL using newspaper3k.
+        Extract full article content from URL using requests and BeautifulSoup.
 
         Args:
             url: Article URL
@@ -69,18 +70,49 @@ class ArticleScraper:
             Dictionary with article content, author, and metadata
         """
         try:
-            article = Article(url)
-            article.download()
-            article.parse()
+            response = requests.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            # Extract title
+            title = soup.find('title')
+            title = title.get_text().strip() if title else 'Unknown'
+
+            # Try to find article content in common article tags
+            article_body = None
+            for tag in ['article', 'main', {'class': re.compile('article|content|post')}]:
+                article_body = soup.find(tag)
+                if article_body:
+                    break
+
+            if not article_body:
+                article_body = soup.find('body')
+
+            # Convert HTML to text
+            h = html2text.HTML2Text()
+            h.ignore_links = False
+            h.ignore_images = True
+            text = h.handle(str(article_body)) if article_body else ''
+
+            # Clean up the text
+            text = re.sub(r'\n\s*\n', '\n\n', text)  # Remove multiple newlines
+            text = text.strip()
+
+            # Try to extract author from meta tags
+            authors = []
+            author_meta = soup.find('meta', {'name': 'author'}) or soup.find('meta', {'property': 'article:author'})
+            if author_meta and author_meta.get('content'):
+                authors = [author_meta.get('content')]
 
             return {
                 'url': url,
-                'title': article.title,
-                'authors': article.authors,
-                'publish_date': article.publish_date,
-                'text': article.text,
-                'top_image': article.top_image,
-                'summary': article.meta_description
+                'title': title,
+                'authors': authors,
+                'publish_date': None,
+                'text': text[:5000],  # Limit to first 5000 chars
+                'top_image': None,
+                'summary': text[:200] if text else ''
             }
 
         except Exception as e:
