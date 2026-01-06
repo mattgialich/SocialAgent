@@ -4,7 +4,12 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 
 ## Features
 
-- **Article Scraping**: Searches Google News for the latest articles on any keyword
+- **Multi-Source Article Search**: Deep search across multiple sources
+  - NewsAPI (100 free requests/day) - high-quality, recent articles
+  - Bing News Search (free tier available) - enterprise news sources
+  - Google News RSS (always free) - fallback option
+  - Smart ranking by relevance and content quality
+  - Returns top 5 most relevant articles with full content
 - **Content Analysis**: Uses Anthropic's Claude to determine if articles are defense-related
 - **Google Docs Integration**: Fetches the AstroForge story from Google Docs
 - **Smart Post Generation**:
@@ -29,8 +34,10 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 ### Prerequisites
 
 - Python 3.8+
-- Anthropic API key
-- Public Google Doc with your AstroForge story
+- **Required:** Anthropic API key
+- **Required:** Public Google Doc with your AstroForge story
+- **Optional (recommended):** NewsAPI key (free) - for better article search
+- **Optional:** Bing Search API key (free tier) - for enterprise news sources
 
 ### Setup
 
@@ -52,11 +59,22 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 
    Edit `.env` and add your credentials:
    ```env
+   # Required
    ANTHROPIC_API_KEY=your_anthropic_api_key_here
    GOOGLE_DOC_ID=your_google_doc_id_here
+
+   # Optional but recommended for better results
+   NEWSAPI_KEY=your_newsapi_key_here
+   BING_SEARCH_KEY=your_bing_key_here
+
+   # Configuration
    DEFAULT_KEYWORD=space technology
-   MAX_ARTICLES=10
+   MAX_ARTICLES=5
    ```
+
+   **Get free API keys:**
+   - NewsAPI: https://newsapi.org/ (100 requests/day free)
+   - Bing News Search: https://www.microsoft.com/en-us/bing/apis/bing-news-search-api
 
 4. **Share your Google Doc publicly** (for AstroForge story)
 
@@ -177,8 +195,24 @@ The script generates:
 
 ## Module Documentation
 
-### `article_scraper.py`
-Scrapes articles from Google News RSS and extracts full content using newspaper3k.
+### `multi_source_finder.py` (Primary)
+**New!** Intelligent multi-source article finder that searches across multiple platforms:
+- Searches NewsAPI, Bing News, and Google News RSS simultaneously
+- Ranks articles by relevance, quality, and content availability
+- Deduplicates results
+- Extracts full article content with multiple strategies
+- Returns top N most relevant articles with actual content
+
+**Key methods**:
+- `find_top_articles()`: Main method - returns top N ranked articles
+- `search_newsapi()`: Search using NewsAPI
+- `search_bing_news()`: Search using Bing News API
+- `search_google_news_rss()`: Search Google News RSS
+- `extract_full_content()`: Enhanced content extraction
+- `rank_articles()`: Intelligent relevance ranking
+
+### `article_scraper.py` (Fallback)
+Scrapes articles from Google News RSS - used as fallback if multi-source fails.
 
 **Key methods**:
 - `search_google_news()`: Finds articles via RSS feed
@@ -223,8 +257,10 @@ Orchestrates the entire workflow.
 |----------|-------------|---------|
 | `ANTHROPIC_API_KEY` | Anthropic API key | Required |
 | `GOOGLE_DOC_ID` | Google Doc ID for AstroForge story (must be publicly shared) | Required |
+| `NEWSAPI_KEY` | NewsAPI key for better article search | Optional (recommended) |
+| `BING_SEARCH_KEY` | Bing News Search API key | Optional |
 | `DEFAULT_KEYWORD` | Default search keyword | `space technology` |
-| `MAX_ARTICLES` | Maximum articles to process | `10` |
+| `MAX_ARTICLES` | Maximum articles to process (now returns top N) | `5` |
 | `TWITTER_MAX_LENGTH` | Max Twitter post length | `280` |
 | `LINKEDIN_MAX_LENGTH` | Max LinkedIn post length | `3000` |
 

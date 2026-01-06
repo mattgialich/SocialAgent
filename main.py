@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 import logging
 
 from article_scraper import ArticleScraper
+from multi_source_finder import MultiSourceArticleFinder
 from content_analyzer import ContentAnalyzer
 from google_docs_client import GoogleDocsClient
 from post_generator import PostGenerator
@@ -45,7 +46,8 @@ class SocialAgent:
         logger.info("Initializing SocialAgent...")
 
         # Initialize components
-        self.scraper = ArticleScraper()
+        self.scraper = ArticleScraper()  # Fallback
+        self.multi_source = MultiSourceArticleFinder()  # Primary search
         self.analyzer = ContentAnalyzer()
         self.post_generator = PostGenerator()
 
@@ -89,15 +91,19 @@ class SocialAgent:
         """
         logger.info(f"Starting article processing for keyword: '{keyword}'")
 
-        # Step 1: Scrape articles
-        logger.info("Step 1: Scraping articles...")
-        articles = self.scraper.scrape_articles(keyword, max_articles)
+        # Step 1: Find top articles from multiple sources
+        logger.info("Step 1: Deep search across multiple sources...")
+        articles = self.multi_source.find_top_articles(keyword, top_n=max_articles)
 
         if not articles:
-            logger.warning("No articles found")
+            logger.warning("No articles found - trying fallback scraper...")
+            articles = self.scraper.scrape_articles(keyword, max_articles)
+
+        if not articles:
+            logger.error("No articles found from any source")
             return {'error': 'No articles found'}
 
-        logger.info(f"Found {len(articles)} articles")
+        logger.info(f"Processing {len(articles)} top articles")
 
         # Step 2: Fetch AstroForge story (if not already fetched)
         if not self.astroforge_story:
