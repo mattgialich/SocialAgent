@@ -21,103 +21,203 @@ class MultiSourceArticleFinder:
 
     def __init__(self):
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
-        self.newsapi_key = os.getenv('NEWSAPI_KEY')
 
-    def search_newsapi(self, keyword: str, max_results: int = 10) -> List[Dict]:
+    def search_google_news_web(self, keyword: str, max_results: int = 15) -> List[Dict]:
         """
-        Search using NewsAPI (provides article descriptions).
-        Free tier: 100 requests/day, articles from last 30 days.
-        Sign up at: https://newsapi.org/
+        Scrape Google News web results (no API key needed).
+        Returns article titles, links, sources, and snippets.
         """
-        if not self.newsapi_key:
-            logger.warning("NewsAPI key not found - skipping NewsAPI source")
-            return []
-
         try:
-            url = "https://newsapi.org/v2/everything"
-            params = {
-                'q': keyword,
-                'apiKey': self.newsapi_key,
-                'language': 'en',
-                'sortBy': 'relevancy',
-                'pageSize': max_results
-            }
+            encoded_keyword = keyword.replace(' ', '+')
+            url = f"https://www.google.com/search?q={encoded_keyword}&tbm=nws"
 
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
 
-            data = response.json()
+            soup = BeautifulSoup(response.content, 'html.parser')
             articles = []
 
-            for item in data.get('articles', []):
-                # NewsAPI provides description and some content
-                article_data = {
-                    'title': item.get('title', ''),
-                    'url': item.get('url', ''),
-                    'published': item.get('publishedAt', ''),
-                    'source': item.get('source', {}).get('name', 'Unknown'),
-                    'description': item.get('description', ''),
-                    'content': item.get('content', ''),  # Often truncated
-                    'author': item.get('author', ''),
-                    'image': item.get('urlToImage', ''),
-                    'score': 10  # NewsAPI results are highly relevant
-                }
-                articles.append(article_data)
+            # Google News results are in div elements with specific classes
+            news_results = soup.find_all('div', class_='SoaBEf')[:max_results]
 
-            logger.info(f"NewsAPI: Found {len(articles)} articles")
+            for result in news_results:
+                try:
+                    # Extract title and link
+                    title_elem = result.find('div', class_='MBeuO')
+                    if not title_elem:
+                        continue
+
+                    link_elem = title_elem.find('a')
+                    title = title_elem.get_text() if title_elem else ''
+                    url = link_elem.get('href', '') if link_elem else ''
+
+                    # Extract source
+                    source_elem = result.find('div', class_='CEMjEf')
+                    source = source_elem.get_text() if source_elem else 'Unknown'
+
+                    # Extract snippet/description
+                    snippet_elem = result.find('div', class_='GI74Re')
+                    snippet = snippet_elem.get_text() if snippet_elem else ''
+
+                    # Extract date
+                    date_elem = result.find('span', class_='OSrXXb')
+                    published = date_elem.get_text() if date_elem else ''
+
+                    if title and url:
+                        article_data = {
+                            'title': title,
+                            'url': url,
+                            'published': published,
+                            'source': source,
+                            'description': snippet,
+                            'content': snippet,
+                            'author': '',
+                            'image': '',
+                            'score': 8  # Web scraping results are good quality
+                        }
+                        articles.append(article_data)
+
+                except Exception as e:
+                    logger.debug(f"Error parsing result: {e}")
+                    continue
+
+            logger.info(f"Google News Web: Found {len(articles)} articles")
             return articles
 
         except Exception as e:
-            logger.error(f"NewsAPI error: {e}")
+            logger.error(f"Google News Web error: {e}")
             return []
 
-    def search_bing_news(self, keyword: str, max_results: int = 10) -> List[Dict]:
+    def search_bing_news_web(self, keyword: str, max_results: int = 15) -> List[Dict]:
         """
-        Search using Bing News Search (free tier available).
-        Better for recent, high-quality news sources.
+        Scrape Bing News web results (no API key needed).
+        Alternative source for news articles.
         """
-        bing_key = os.getenv('BING_SEARCH_KEY')
-        if not bing_key:
-            logger.warning("Bing Search key not found - skipping Bing News")
-            return []
-
         try:
-            url = "https://api.bing.microsoft.com/v7.0/news/search"
-            headers = {'Ocp-Apim-Subscription-Key': bing_key}
-            params = {
-                'q': keyword,
-                'count': max_results,
-                'mkt': 'en-US',
-                'freshness': 'Month'
-            }
+            encoded_keyword = keyword.replace(' ', '%20')
+            url = f"https://www.bing.com/news/search?q={encoded_keyword}"
 
-            response = requests.get(url, headers=headers, params=params, timeout=10)
+            response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
 
-            data = response.json()
+            soup = BeautifulSoup(response.content, 'html.parser')
             articles = []
 
-            for item in data.get('value', []):
-                article_data = {
-                    'title': item.get('name', ''),
-                    'url': item.get('url', ''),
-                    'published': item.get('datePublished', ''),
-                    'source': item.get('provider', [{}])[0].get('name', 'Unknown'),
-                    'description': item.get('description', ''),
-                    'content': item.get('description', ''),
-                    'author': '',
-                    'image': item.get('image', {}).get('thumbnail', {}).get('contentUrl', ''),
-                    'score': 8  # Bing results are good quality
-                }
-                articles.append(article_data)
+            # Bing news results
+            news_cards = soup.find_all('div', class_='news-card')[:max_results]
 
-            logger.info(f"Bing News: Found {len(articles)} articles")
+            for card in news_cards:
+                try:
+                    # Extract title and link
+                    title_elem = card.find('a', class_='title')
+                    if not title_elem:
+                        continue
+
+                    title = title_elem.get_text().strip()
+                    url = title_elem.get('href', '')
+
+                    # Extract source
+                    source_elem = card.find('span', class_='source')
+                    source = source_elem.get_text().strip() if source_elem else 'Unknown'
+
+                    # Extract snippet
+                    snippet_elem = card.find('div', class_='snippet')
+                    snippet = snippet_elem.get_text().strip() if snippet_elem else ''
+
+                    # Extract date
+                    date_elem = card.find('span', attrs={'aria-label': True})
+                    published = date_elem.get_text().strip() if date_elem else ''
+
+                    if title and url:
+                        article_data = {
+                            'title': title,
+                            'url': url,
+                            'published': published,
+                            'source': source,
+                            'description': snippet,
+                            'content': snippet,
+                            'author': '',
+                            'image': '',
+                            'score': 7  # Bing web results
+                        }
+                        articles.append(article_data)
+
+                except Exception as e:
+                    logger.debug(f"Error parsing Bing result: {e}")
+                    continue
+
+            logger.info(f"Bing News Web: Found {len(articles)} articles")
             return articles
 
         except Exception as e:
-            logger.error(f"Bing News error: {e}")
+            logger.error(f"Bing News Web error: {e}")
+            return []
+
+    def search_yahoo_news(self, keyword: str, max_results: int = 15) -> List[Dict]:
+        """
+        Scrape Yahoo News search results (no API key needed).
+        Another good source for diverse news coverage.
+        """
+        try:
+            encoded_keyword = keyword.replace(' ', '+')
+            url = f"https://news.search.yahoo.com/search?p={encoded_keyword}"
+
+            response = requests.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.content, 'html.parser')
+            articles = []
+
+            # Yahoo news search results
+            search_results = soup.find_all('div', class_='dd')[:max_results]
+
+            for result in search_results:
+                try:
+                    # Extract title and link
+                    title_elem = result.find('h4')
+                    if not title_elem:
+                        continue
+
+                    link_elem = title_elem.find('a')
+                    if not link_elem:
+                        continue
+
+                    title = link_elem.get_text().strip()
+                    url = link_elem.get('href', '')
+
+                    # Extract source and date
+                    cite_elem = result.find('cite')
+                    source = cite_elem.get_text().strip() if cite_elem else 'Unknown'
+
+                    # Extract snippet
+                    snippet_elem = result.find('p')
+                    snippet = snippet_elem.get_text().strip() if snippet_elem else ''
+
+                    if title and url:
+                        article_data = {
+                            'title': title,
+                            'url': url,
+                            'published': '',
+                            'source': source,
+                            'description': snippet,
+                            'content': snippet,
+                            'author': '',
+                            'image': '',
+                            'score': 6  # Yahoo results
+                        }
+                        articles.append(article_data)
+
+                except Exception as e:
+                    logger.debug(f"Error parsing Yahoo result: {e}")
+                    continue
+
+            logger.info(f"Yahoo News: Found {len(articles)} articles")
+            return articles
+
+        except Exception as e:
+            logger.error(f"Yahoo News error: {e}")
             return []
 
     def search_google_news_rss(self, keyword: str, max_results: int = 10) -> List[Dict]:
@@ -314,11 +414,12 @@ class MultiSourceArticleFinder:
 
         all_articles = []
 
-        # Search all available sources
+        # Search all available sources (all via web scraping - no API keys needed!)
         sources = [
-            ('NewsAPI', lambda: self.search_newsapi(keyword, 15)),
-            ('Bing News', lambda: self.search_bing_news(keyword, 15)),
-            ('Google News', lambda: self.search_google_news_rss(keyword, 15))
+            ('Google News Web', lambda: self.search_google_news_web(keyword, 15)),
+            ('Bing News Web', lambda: self.search_bing_news_web(keyword, 15)),
+            ('Yahoo News', lambda: self.search_yahoo_news(keyword, 15)),
+            ('Google News RSS', lambda: self.search_google_news_rss(keyword, 15))
         ]
 
         for source_name, search_func in sources:

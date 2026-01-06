@@ -4,10 +4,12 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 
 ## Features
 
-- **Multi-Source Article Search**: Deep search across multiple sources
-  - NewsAPI (100 free requests/day) - high-quality, recent articles
-  - Bing News Search (free tier available) - enterprise news sources
-  - Google News RSS (always free) - fallback option
+- **Multi-Source Article Search**: Deep search across multiple sources via web scraping
+  - Google News Web (direct scraping) - high-quality, recent articles
+  - Bing News Web (direct scraping) - enterprise news sources
+  - Yahoo News (direct scraping) - diverse coverage
+  - Google News RSS (always free) - additional source
+  - **No API keys required for news search!**
   - Smart ranking by relevance and content quality
   - Returns top 5 most relevant articles with full content
 - **Content Analysis**: Uses Anthropic's Claude to determine if articles are defense-related
@@ -34,10 +36,9 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 ### Prerequisites
 
 - Python 3.8+
-- **Required:** Anthropic API key
+- **Required:** Anthropic API key (for AI content analysis and post generation)
 - **Required:** Public Google Doc with your AstroForge story
-- **Optional (recommended):** NewsAPI key (free) - for better article search
-- **Optional:** Bing Search API key (free tier) - for enterprise news sources
+- **No other API keys needed!** Article search uses web scraping
 
 ### Setup
 
@@ -63,18 +64,15 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
    ANTHROPIC_API_KEY=your_anthropic_api_key_here
    GOOGLE_DOC_ID=your_google_doc_id_here
 
-   # Optional but recommended for better results
-   NEWSAPI_KEY=your_newsapi_key_here
-   BING_SEARCH_KEY=your_bing_key_here
-
    # Configuration
    DEFAULT_KEYWORD=space technology
    MAX_ARTICLES=5
    ```
 
-   **Get free API keys:**
-   - NewsAPI: https://newsapi.org/ (100 requests/day free)
-   - Bing News Search: https://www.microsoft.com/en-us/bing/apis/bing-news-search-api
+   **Get your Anthropic API key:**
+   - Sign up at https://console.anthropic.com/
+   - Navigate to API Keys section
+   - Create a new API key
 
 4. **Share your Google Doc publicly** (for AstroForge story)
 
@@ -196,8 +194,9 @@ The script generates:
 ## Module Documentation
 
 ### `multi_source_finder.py` (Primary)
-**New!** Intelligent multi-source article finder that searches across multiple platforms:
-- Searches NewsAPI, Bing News, and Google News RSS simultaneously
+**New!** Intelligent multi-source article finder that searches across multiple platforms via web scraping:
+- Scrapes Google News Web, Bing News Web, Yahoo News, and Google News RSS simultaneously
+- **No API keys required!** All searches use direct web scraping
 - Ranks articles by relevance, quality, and content availability
 - Deduplicates results
 - Extracts full article content with multiple strategies
@@ -205,9 +204,10 @@ The script generates:
 
 **Key methods**:
 - `find_top_articles()`: Main method - returns top N ranked articles
-- `search_newsapi()`: Search using NewsAPI
-- `search_bing_news()`: Search using Bing News API
-- `search_google_news_rss()`: Search Google News RSS
+- `search_google_news_web()`: Scrape Google News web results
+- `search_bing_news_web()`: Scrape Bing News web results
+- `search_yahoo_news()`: Scrape Yahoo News search results
+- `search_google_news_rss()`: Parse Google News RSS feed
 - `extract_full_content()`: Enhanced content extraction
 - `rank_articles()`: Intelligent relevance ranking
 
@@ -255,12 +255,10 @@ Orchestrates the entire workflow.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ANTHROPIC_API_KEY` | Anthropic API key | Required |
+| `ANTHROPIC_API_KEY` | Anthropic API key for AI analysis and post generation | Required |
 | `GOOGLE_DOC_ID` | Google Doc ID for AstroForge story (must be publicly shared) | Required |
-| `NEWSAPI_KEY` | NewsAPI key for better article search | Optional (recommended) |
-| `BING_SEARCH_KEY` | Bing News Search API key | Optional |
 | `DEFAULT_KEYWORD` | Default search keyword | `space technology` |
-| `MAX_ARTICLES` | Maximum articles to process (now returns top N) | `5` |
+| `MAX_ARTICLES` | Maximum articles to process (returns top N ranked) | `5` |
 | `TWITTER_MAX_LENGTH` | Max Twitter post length | `280` |
 | `LINKEDIN_MAX_LENGTH` | Max LinkedIn post length | `3000` |
 
