@@ -90,12 +90,40 @@ python main.py "space technology"
 # Specify maximum number of articles
 python main.py "asteroid mining" --max-articles 5
 
+# Clean output - just posts and links (recommended!)
+python main.py "satellite technology" --simple --quiet
+
 # Specify output file
 python main.py "satellite technology" --output my_results.json
 
 # Override Google Doc ID
 python main.py "defense tech" --google-doc-id "your-doc-id-here"
+
+# Quiet mode - reduce logging
+python main.py "space mining" --quiet
 ```
+
+### Output Modes
+
+**Simple Mode** (Recommended for clean output):
+```bash
+python main.py "asteroid mining" --simple --quiet
+```
+Shows only:
+- Generated social media posts
+- Source article links
+- Minimal logging
+
+**Full Mode** (Default):
+```bash
+python main.py "asteroid mining"
+```
+Shows:
+- Article titles, URLs, authors
+- Analysis confidence scores
+- Reasoning for classification
+- Generated posts
+- Saves to JSON file
 
 ### Using Default Keyword
 

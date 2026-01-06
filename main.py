@@ -190,48 +190,73 @@ class SocialAgent:
         except Exception as e:
             logger.error(f"Error saving results: {e}")
 
-    def print_results(self, results: dict):
+    def print_results(self, results: dict, simple: bool = False):
         """
         Print results in a readable format.
 
         Args:
             results: Results dictionary
+            simple: If True, show only posts and links (clean output)
         """
-        print(f"\n{'='*80}")
-        print(f"SOCIAL AGENT RESULTS")
-        print(f"{'='*80}")
-        print(f"Keyword: {results['keyword']}")
-        print(f"Timestamp: {results['timestamp']}")
-        print(f"Articles processed: {results['articles_processed']}")
-        print(f"{'='*80}\n")
+        if simple:
+            # Clean, minimal output - just posts and links
+            print("\n" + "="*80)
+            print("SOCIAL MEDIA POSTS")
+            print("="*80 + "\n")
 
-        # Defense articles (Twitter)
-        if results['defense_articles']:
-            print(f"\n🛡️  DEFENSE ARTICLES (Twitter Posts) - {len(results['defense_articles'])}")
-            print("="*80)
-            for i, article in enumerate(results['defense_articles'], 1):
-                print(f"\n[{i}] {article['title']}")
-                print(f"URL: {article['url']}")
-                print(f"Authors: {', '.join(article['authors']) if article['authors'] else 'Unknown'}")
-                print(f"Confidence: {article['confidence']:.2f}")
-                print(f"\nTwitter Post:")
+            # Defense articles (Twitter)
+            for i, article in enumerate(results.get('defense_articles', []), 1):
+                print(f"🐦 TWITTER POST #{i}")
                 print("-" * 80)
                 print(article['post'])
-                print("-" * 80)
+                print(f"\nSource: {article['url']}")
+                print("=" * 80 + "\n")
 
-        # Non-defense articles (LinkedIn)
-        if results['non_defense_articles']:
-            print(f"\n🌐 NON-DEFENSE ARTICLES (LinkedIn Posts) - {len(results['non_defense_articles'])}")
-            print("="*80)
-            for i, article in enumerate(results['non_defense_articles'], 1):
-                print(f"\n[{i}] {article['title']}")
-                print(f"URL: {article['url']}")
-                print(f"Authors: {', '.join(article['authors']) if article['authors'] else 'Unknown'}")
-                print(f"Confidence: {article['confidence']:.2f}")
-                print(f"\nLinkedIn Post:")
+            # Non-defense articles (LinkedIn)
+            for i, article in enumerate(results.get('non_defense_articles', []), 1):
+                print(f"💼 LINKEDIN POST #{i}")
                 print("-" * 80)
                 print(article['post'])
-                print("-" * 80)
+                print(f"\nSource: {article['url']}")
+                print("=" * 80 + "\n")
+
+        else:
+            # Full detailed output
+            print(f"\n{'='*80}")
+            print(f"SOCIAL AGENT RESULTS")
+            print(f"{'='*80}")
+            print(f"Keyword: {results['keyword']}")
+            print(f"Timestamp: {results['timestamp']}")
+            print(f"Articles processed: {results['articles_processed']}")
+            print(f"{'='*80}\n")
+
+            # Defense articles (Twitter)
+            if results['defense_articles']:
+                print(f"\n🛡️  DEFENSE ARTICLES (Twitter Posts) - {len(results['defense_articles'])}")
+                print("="*80)
+                for i, article in enumerate(results['defense_articles'], 1):
+                    print(f"\n[{i}] {article['title']}")
+                    print(f"URL: {article['url']}")
+                    print(f"Authors: {', '.join(article['authors']) if article['authors'] else 'Unknown'}")
+                    print(f"Confidence: {article['confidence']:.2f}")
+                    print(f"\nTwitter Post:")
+                    print("-" * 80)
+                    print(article['post'])
+                    print("-" * 80)
+
+            # Non-defense articles (LinkedIn)
+            if results['non_defense_articles']:
+                print(f"\n🌐 NON-DEFENSE ARTICLES (LinkedIn Posts) - {len(results['non_defense_articles'])}")
+                print("="*80)
+                for i, article in enumerate(results['non_defense_articles'], 1):
+                    print(f"\n[{i}] {article['title']}")
+                    print(f"URL: {article['url']}")
+                    print(f"Authors: {', '.join(article['authors']) if article['authors'] else 'Unknown'}")
+                    print(f"Confidence: {article['confidence']:.2f}")
+                    print(f"\nLinkedIn Post:")
+                    print("-" * 80)
+                    print(article['post'])
+                    print("-" * 80)
 
 
 def main():
@@ -264,8 +289,25 @@ def main():
         default=None,
         help='Google Doc ID for AstroForge story (overrides env variable)'
     )
+    parser.add_argument(
+        '--simple',
+        action='store_true',
+        help='Simple output mode - only show posts and source links'
+    )
+    parser.add_argument(
+        '--quiet',
+        action='store_true',
+        help='Reduce logging output (only show warnings and errors)'
+    )
 
     args = parser.parse_args()
+
+    # Set logging level based on quiet flag
+    if args.quiet:
+        logging.getLogger().setLevel(logging.WARNING)
+        logging.getLogger('article_scraper').setLevel(logging.WARNING)
+        logging.getLogger('content_analyzer').setLevel(logging.WARNING)
+        logging.getLogger('post_generator').setLevel(logging.WARNING)
 
     # Load environment variables
     load_dotenv()
@@ -285,10 +327,14 @@ def main():
         results = agent.process_articles(keyword, args.max_articles)
 
         # Save and print results
-        agent.save_results(results, args.output)
-        agent.print_results(results)
+        if not args.simple:
+            agent.save_results(results, args.output)
+        agent.print_results(results, simple=args.simple)
 
-        logger.info("\n✓ Social Agent completed successfully")
+        if not args.simple:
+            logger.info("\n✓ Social Agent completed successfully")
+        else:
+            print("✓ Complete")
         return 0
 
     except KeyboardInterrupt:

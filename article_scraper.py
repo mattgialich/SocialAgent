@@ -89,44 +89,87 @@ class ArticleScraper:
 
             soup = BeautifulSoup(response.content, 'html.parser')
 
+            # Remove script and style elements
+            for script in soup(["script", "style", "nav", "header", "footer", "aside"]):
+                script.decompose()
+
             # Extract title
             title = soup.find('title')
             title = title.get_text().strip() if title else 'Unknown'
 
-            # Try to find article content in common article tags
+            # Also try meta title tags
+            if title == 'Unknown':
+                og_title = soup.find('meta', property='og:title')
+                if og_title:
+                    title = og_title.get('content', 'Unknown')
+
+            # Try to find article content - multiple strategies
             article_body = None
-            for tag in ['article', 'main', {'class': re.compile('article|content|post')}]:
-                article_body = soup.find(tag)
-                if article_body:
-                    break
 
+            # Strategy 1: Look for article tag
+            article_body = soup.find('article')
+
+            # Strategy 2: Look for common content classes
             if not article_body:
-                article_body = soup.find('body')
+                for class_pattern in ['article-body', 'article-content', 'post-content',
+                                     'entry-content', 'content-body', 'story-body']:
+                    article_body = soup.find(class_=re.compile(class_pattern, re.I))
+                    if article_body:
+                        break
 
-            # Convert HTML to text
-            h = html2text.HTML2Text()
-            h.ignore_links = False
-            h.ignore_images = True
-            text = h.handle(str(article_body)) if article_body else ''
+            # Strategy 3: Look for main tag
+            if not article_body:
+                article_body = soup.find('main')
+
+            # Strategy 4: Find all paragraphs and combine
+            if not article_body:
+                paragraphs = soup.find_all('p')
+                if paragraphs:
+                    # Create a container for all paragraphs
+                    article_body = soup.new_tag('div')
+                    for p in paragraphs:
+                        article_body.append(p)
+
+            # Extract text content
+            text = ''
+            if article_body:
+                # Get all paragraph text
+                paragraphs = article_body.find_all('p')
+                text_parts = [p.get_text().strip() for p in paragraphs if p.get_text().strip()]
+                text = '\n\n'.join(text_parts)
+
+            # Fallback: just get all text from body
+            if not text or len(text) < 100:
+                body = soup.find('body')
+                if body:
+                    text = body.get_text(separator='\n', strip=True)
 
             # Clean up the text
-            text = re.sub(r'\n\s*\n', '\n\n', text)  # Remove multiple newlines
+            text = re.sub(r'\n\s*\n+', '\n\n', text)  # Remove multiple newlines
+            text = re.sub(r'[ \t]+', ' ', text)  # Remove multiple spaces
             text = text.strip()
 
             # Try to extract author from meta tags
             authors = []
-            author_meta = soup.find('meta', {'name': 'author'}) or soup.find('meta', {'property': 'article:author'})
+            author_meta = (soup.find('meta', {'name': 'author'}) or
+                          soup.find('meta', {'property': 'article:author'}) or
+                          soup.find('meta', {'name': 'dc.creator'}))
             if author_meta and author_meta.get('content'):
                 authors = [author_meta.get('content')]
+
+            # Log what we extracted
+            logger.info(f"Extracted {len(text)} chars from {url[:50]}...")
+            if text:
+                logger.debug(f"Content preview: {text[:200]}...")
 
             return {
                 'url': url,
                 'title': title,
                 'authors': authors,
                 'publish_date': None,
-                'text': text[:5000],  # Limit to first 5000 chars
+                'text': text[:10000],  # Increased limit to 10000 chars
                 'top_image': None,
-                'summary': text[:200] if text else ''
+                'summary': text[:300] if text else ''
             }
 
         except Exception as e:
