@@ -49,34 +49,31 @@ class SocialAgent:
         self.analyzer = ContentAnalyzer()
         self.post_generator = PostGenerator()
 
-        # Initialize Google Docs client (may require authentication)
-        try:
-            self.docs_client = GoogleDocsClient()
-            self.google_doc_id = google_doc_id or os.getenv('GOOGLE_DOC_ID')
-        except FileNotFoundError:
-            logger.warning("Google Docs client not initialized - credentials missing")
-            self.docs_client = None
-            self.google_doc_id = None
+        # Initialize Google Docs client (works with public docs, no auth needed)
+        self.docs_client = GoogleDocsClient()
+        self.google_doc_id = google_doc_id or os.getenv('GOOGLE_DOC_ID')
 
         self.astroforge_story = None
 
     def fetch_astroforge_story(self):
         """Fetch the AstroForge story from Google Docs."""
-        if not self.docs_client:
-            logger.error("Google Docs client not initialized")
-            return None
-
         if not self.google_doc_id:
-            logger.error("Google Doc ID not provided")
+            logger.warning("Google Doc ID not provided - will use placeholder")
             return None
 
         try:
             logger.info("Fetching AstroForge story from Google Docs...")
             self.astroforge_story = self.docs_client.get_astroforge_story(self.google_doc_id)
+
+            # Check if fetch was successful
+            if self.astroforge_story.get('title') == 'Error':
+                logger.warning("Could not fetch Google Doc - using placeholder")
+                return None
+
             logger.info(f"Successfully fetched: {self.astroforge_story['title']}")
             return self.astroforge_story
         except Exception as e:
-            logger.error(f"Error fetching AstroForge story: {e}")
+            logger.warning(f"Error fetching AstroForge story: {e}")
             return None
 
     def process_articles(self, keyword: str, max_articles: int = 10):

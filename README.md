@@ -30,7 +30,7 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 
 - Python 3.8+
 - Anthropic API key
-- Google Cloud Project with Docs API enabled (for Google Docs integration)
+- Public Google Doc with your AstroForge story
 
 ### Setup
 
@@ -58,23 +58,26 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
    MAX_ARTICLES=10
    ```
 
-4. **Set up Google Docs API** (Required for AstroForge story)
+4. **Share your Google Doc publicly** (for AstroForge story)
 
-   a. Go to [Google Cloud Console](https://console.cloud.google.com/)
+   a. Open your Google Doc with the AstroForge story
 
-   b. Create a new project or select an existing one
+   b. Click "Share" button (top right)
 
-   c. Enable the Google Docs API
+   c. Click "Change to anyone with the link"
 
-   d. Create OAuth 2.0 credentials:
-      - Go to "APIs & Services" → "Credentials"
-      - Click "Create Credentials" → "OAuth client ID"
-      - Choose "Desktop application"
-      - Download the credentials
+   d. Set to "Viewer" access
 
-   e. Save the downloaded file as `credentials.json` in the project directory
+   e. Copy the document ID from the URL:
+      - URL format: `https://docs.google.com/document/d/{DOCUMENT_ID}/edit`
+      - Example ID: `1CB3rXg8Wk3fGc3mdXBI8H0rFGv7V_qthiomozUzxmV0`
 
-   f. On first run, you'll be prompted to authenticate in your browser
+   f. Add the ID to your `.env` file:
+      ```
+      GOOGLE_DOC_ID=your_document_id_here
+      ```
+
+   **No API keys or OAuth needed!** Just make the doc publicly viewable.
 
 ## Usage
 
@@ -219,8 +222,7 @@ Orchestrates the entire workflow.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `ANTHROPIC_API_KEY` | Anthropic API key | Required |
-| `GOOGLE_DOC_ID` | Google Doc ID for AstroForge story | Required |
-| `GOOGLE_CREDENTIALS_FILE` | Path to Google OAuth credentials | `credentials.json` |
+| `GOOGLE_DOC_ID` | Google Doc ID for AstroForge story (must be publicly shared) | Required |
 | `DEFAULT_KEYWORD` | Default search keyword | `space technology` |
 | `MAX_ARTICLES` | Maximum articles to process | `10` |
 | `TWITTER_MAX_LENGTH` | Max Twitter post length | `280` |
@@ -250,10 +252,10 @@ python post_generator.py
 - Ensure `ANTHROPIC_API_KEY` is set in your `.env` file
 - Get an API key from [Anthropic Console](https://console.anthropic.com/)
 
-### "Credentials file not found"
-- Download OAuth 2.0 credentials from Google Cloud Console
-- Save as `credentials.json` in the project directory
-- See setup instructions above
+### "Could not fetch document"
+- Make sure your Google Doc is shared publicly ("Anyone with the link can view")
+- Check that the GOOGLE_DOC_ID in .env is correct
+- Verify the document ID from the URL
 
 ### "No articles found"
 - Try a different keyword
@@ -275,10 +277,8 @@ python post_generator.py
 
 - `requests`: HTTP requests
 - `beautifulsoup4`: HTML parsing and article extraction
-- `google-api-python-client`: Google Docs API
 - `anthropic`: Anthropic API client for Claude
 - `python-dotenv`: Environment variable management
-- `feedparser`: RSS feed parsing
 - `lxml`: XML/HTML parsing
 
 ## License
