@@ -1,10 +1,10 @@
 """
 Content Analyzer Module
-Uses OpenAI to analyze article content and determine if it's defense-related.
+Uses Anthropic's Claude to analyze article content and determine if it's defense-related.
 """
 
 import os
-from openai import OpenAI
+from anthropic import Anthropic
 from typing import Dict
 import logging
 
@@ -20,13 +20,13 @@ class ContentAnalyzer:
         Initialize the ContentAnalyzer.
 
         Args:
-            api_key: OpenAI API key. If not provided, will use OPENAI_API_KEY env variable.
+            api_key: Anthropic API key. If not provided, will use ANTHROPIC_API_KEY env variable.
         """
-        self.api_key = api_key or os.getenv('OPENAI_API_KEY')
+        self.api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
         if not self.api_key:
-            raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY environment variable.")
+            raise ValueError("Anthropic API key is required. Set ANTHROPIC_API_KEY environment variable.")
 
-        self.client = OpenAI(api_key=self.api_key)
+        self.client = Anthropic(api_key=self.api_key)
 
     def is_defense_related(self, article: Dict) -> Dict:
         """
@@ -73,19 +73,19 @@ REASONING: [Brief explanation of your decision]
 
 Be strict in your assessment - only classify as defense-related if the primary focus is on defense topics."""
 
-            # Call OpenAI API
-            response = self.client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "You are an expert analyst specializing in identifying defense and military-related content."},
-                    {"role": "user", "content": prompt}
-                ],
+            # Call Claude API
+            response = self.client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=300,
                 temperature=0.3,
-                max_tokens=300
+                system="You are an expert analyst specializing in identifying defense and military-related content.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
             )
 
             # Parse the response
-            response_text = response.choices[0].message.content
+            response_text = response.content[0].text
             logger.info(f"Analysis response: {response_text}")
 
             # Extract decision, confidence, and reasoning

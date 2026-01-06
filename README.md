@@ -5,7 +5,7 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 ## Features
 
 - **Article Scraping**: Searches Google News for the latest articles on any keyword
-- **Content Analysis**: Uses OpenAI GPT-4 to determine if articles are defense-related
+- **Content Analysis**: Uses Anthropic's Claude to determine if articles are defense-related
 - **Google Docs Integration**: Fetches the AstroForge story from Google Docs
 - **Smart Post Generation**:
   - **Defense articles** → Twitter posts
@@ -29,7 +29,7 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 ### Prerequisites
 
 - Python 3.8+
-- OpenAI API key
+- Anthropic API key
 - Google Cloud Project with Docs API enabled (for Google Docs integration)
 
 ### Setup
@@ -52,7 +52,7 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 
    Edit `.env` and add your credentials:
    ```env
-   OPENAI_API_KEY=your_openai_api_key_here
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
    GOOGLE_DOC_ID=your_google_doc_id_here
    DEFAULT_KEYWORD=space technology
    MAX_ARTICLES=10
@@ -155,7 +155,7 @@ Scrapes articles from Google News RSS and extracts full content using newspaper3
 - `scrape_articles()`: Main method to get articles with content
 
 ### `content_analyzer.py`
-Analyzes article content using OpenAI to determine if it's defense-related.
+Analyzes article content using Anthropic's Claude to determine if it's defense-related.
 
 **Key methods**:
 - `is_defense_related()`: Analyzes a single article
@@ -169,7 +169,7 @@ Fetches content from Google Docs using the Google Docs API.
 - `get_astroforge_story()`: Specifically fetches the AstroForge story
 
 ### `post_generator.py`
-Generates platform-appropriate social media posts using OpenAI.
+Generates platform-appropriate social media posts using Anthropic's Claude.
 
 **Key methods**:
 - `generate_twitter_post()`: Creates Twitter posts for defense articles
@@ -190,7 +190,7 @@ Orchestrates the entire workflow.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key | Required |
+| `ANTHROPIC_API_KEY` | Anthropic API key | Required |
 | `GOOGLE_DOC_ID` | Google Doc ID for AstroForge story | Required |
 | `GOOGLE_CREDENTIALS_FILE` | Path to Google OAuth credentials | `credentials.json` |
 | `DEFAULT_KEYWORD` | Default search keyword | `space technology` |
@@ -218,9 +218,9 @@ python post_generator.py
 
 ## Troubleshooting
 
-### "OpenAI API key is required"
-- Ensure `OPENAI_API_KEY` is set in your `.env` file
-- Get an API key from [OpenAI Platform](https://platform.openai.com/)
+### "Anthropic API key is required"
+- Ensure `ANTHROPIC_API_KEY` is set in your `.env` file
+- Get an API key from [Anthropic Console](https://console.anthropic.com/)
 
 ### "Credentials file not found"
 - Download OAuth 2.0 credentials from Google Cloud Console
@@ -238,7 +238,7 @@ python post_generator.py
 
 ## Best Practices
 
-1. **API Costs**: OpenAI API calls cost money. Start with small `--max-articles` values for testing
+1. **API Costs**: Anthropic API calls cost money. Start with small `--max-articles` values for testing
 2. **Rate Limiting**: Don't scrape too many articles at once to avoid rate limits
 3. **Google Docs**: Keep your AstroForge story doc updated
 4. **Keywords**: Use specific keywords for better results (e.g., "asteroid mining" vs "space")
@@ -246,12 +246,12 @@ python post_generator.py
 ## Dependencies
 
 - `requests`: HTTP requests
-- `beautifulsoup4`: HTML parsing
-- `newspaper3k`: Article extraction
+- `beautifulsoup4`: HTML parsing and article extraction
 - `google-api-python-client`: Google Docs API
-- `openai`: OpenAI API client
+- `anthropic`: Anthropic API client for Claude
 - `python-dotenv`: Environment variable management
 - `feedparser`: RSS feed parsing
+- `lxml`: XML/HTML parsing
 
 ## License
 

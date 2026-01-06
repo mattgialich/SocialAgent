@@ -4,7 +4,7 @@ Generates Twitter and LinkedIn posts based on article analysis and AstroForge st
 """
 
 import os
-from openai import OpenAI
+from anthropic import Anthropic
 from typing import Dict, List
 import logging
 
@@ -20,13 +20,13 @@ class PostGenerator:
         Initialize the PostGenerator.
 
         Args:
-            api_key: OpenAI API key. If not provided, uses OPENAI_API_KEY env variable.
+            api_key: Anthropic API key. If not provided, uses ANTHROPIC_API_KEY env variable.
         """
-        self.api_key = api_key or os.getenv('OPENAI_API_KEY')
+        self.api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
         if not self.api_key:
-            raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY environment variable.")
+            raise ValueError("Anthropic API key is required. Set ANTHROPIC_API_KEY environment variable.")
 
-        self.client = OpenAI(api_key=self.api_key)
+        self.client = Anthropic(api_key=self.api_key)
         self.twitter_max_length = int(os.getenv('TWITTER_MAX_LENGTH', 280))
         self.linkedin_max_length = int(os.getenv('LINKEDIN_MAX_LENGTH', 3000))
 
@@ -83,18 +83,18 @@ Requirements:
 
 Return ONLY the tweet text, nothing else."""
 
-            # Call OpenAI API
-            response = self.client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "You are a social media expert specializing in defense and aerospace topics. Create engaging, concise Twitter posts."},
-                    {"role": "user", "content": prompt}
-                ],
+            # Call Claude API
+            response = self.client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=200,
                 temperature=0.7,
-                max_tokens=200
+                system="You are a social media expert specializing in defense and aerospace topics. Create engaging, concise Twitter posts.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
             )
 
-            tweet = response.choices[0].message.content.strip()
+            tweet = response.content[0].text.strip()
 
             # Ensure it's within length limits
             if len(tweet) > self.twitter_max_length:
@@ -173,18 +173,18 @@ Requirements:
 
 Return ONLY the LinkedIn post text, nothing else."""
 
-            # Call OpenAI API
-            response = self.client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "You are a professional content creator specializing in technology and aerospace topics for LinkedIn. Create thoughtful, engaging posts that provide value."},
-                    {"role": "user", "content": prompt}
-                ],
+            # Call Claude API
+            response = self.client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=1000,
                 temperature=0.7,
-                max_tokens=1000
+                system="You are a professional content creator specializing in technology and aerospace topics for LinkedIn. Create thoughtful, engaging posts that provide value.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
             )
 
-            post = response.choices[0].message.content.strip()
+            post = response.content[0].text.strip()
 
             # Ensure it's within length limits
             if len(post) > self.linkedin_max_length:
