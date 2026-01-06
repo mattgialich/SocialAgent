@@ -5,11 +5,11 @@ Finds and retrieves the latest articles for a given keyword using Google News RS
 
 import requests
 from bs4 import BeautifulSoup
-import feedparser
 import html2text
 from typing import List, Dict
 import logging
 import re
+from xml.etree import ElementTree as ET
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -40,15 +40,29 @@ class ArticleScraper:
             rss_url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl=en-US&gl=US&ceid=US:en"
 
             logger.info(f"Fetching articles for keyword: {keyword}")
-            feed = feedparser.parse(rss_url)
+
+            # Fetch the RSS feed
+            response = requests.get(rss_url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+
+            # Parse RSS XML
+            root = ET.fromstring(response.content)
 
             articles = []
-            for entry in feed.entries[:max_results]:
+            # RSS items are in channel/item
+            items = root.findall('.//item')[:max_results]
+
+            for item in items:
+                title_elem = item.find('title')
+                link_elem = item.find('link')
+                pub_date_elem = item.find('pubDate')
+                source_elem = item.find('source')
+
                 article_data = {
-                    'title': entry.get('title', ''),
-                    'url': entry.get('link', ''),
-                    'published': entry.get('published', ''),
-                    'source': entry.get('source', {}).get('title', 'Unknown')
+                    'title': title_elem.text if title_elem is not None else '',
+                    'url': link_elem.text if link_elem is not None else '',
+                    'published': pub_date_elem.text if pub_date_elem is not None else '',
+                    'source': source_elem.text if source_elem is not None else 'Unknown'
                 }
                 articles.append(article_data)
 
