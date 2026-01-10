@@ -95,6 +95,59 @@ An intelligent web scraper that finds the latest articles for a given keyword, a
 
    **No API keys or OAuth needed!** Just make the doc publicly viewable.
 
+## 🚀 Quick Start with Replit (Recommended for iPad/Browser)
+
+**The easiest way to run Social Agent on iPad or any browser!**
+
+### Setup on Replit
+
+1. **Import to Replit**
+   - Go to [Replit](https://replit.com/)
+   - Click "Create Repl" → "Import from GitHub"
+   - Paste your repository URL
+   - Replit will automatically detect it's a Python project
+
+2. **Install Dependencies**
+   - Replit usually auto-installs from `requirements.txt`
+   - Or run in Shell: `pip install -r requirements.txt`
+
+3. **Configure Environment Variables**
+   - Click the "Secrets" tab (🔒 icon in left sidebar)
+   - Add these secrets:
+     - Key: `ANTHROPIC_API_KEY` → Value: your Anthropic API key
+     - Key: `GOOGLE_DOC_ID` → Value: `1CB3rXg8Wk3fGc3mdXBI8H0rFGv7V_qthiomozUzxmV0`
+   - These are encrypted and secure!
+
+4. **Click the "Run" button** ▶️
+   - The web viewer will automatically start
+   - Replit will show the preview in the right panel
+   - Or click "Open in new tab" for full screen
+
+### Using the Web Interface
+
+Once running, you'll see a beautiful web interface with:
+
+1. **Scraper Form** (at the top)
+   - Enter your keyword (e.g., "asteroid mining")
+   - Set max articles (1-10)
+   - Click "🚀 Run Scraper"
+   - Wait 1-2 minutes while it processes
+   - Page auto-refreshes with results!
+
+2. **Results Display**
+   - Statistics dashboard
+   - Defense articles with Twitter posts
+   - Non-defense articles with LinkedIn posts
+   - Click source links to read original articles
+
+**No Shell commands needed!** Everything works from the web interface - perfect for iPad!
+
+### Tips for Replit
+- Keep the tab open while scraper runs (1-2 minutes)
+- Results are saved to `results.json` automatically
+- Click "🔄 Refresh" button to reload if needed
+- The scraper form is always visible - run it anytime!
+
 ## Usage
 
 ### Basic Usage
