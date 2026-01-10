@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Agent - Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .meta {
+            color: #666;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+
+        .meta strong {
+            color: #333;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.5em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-twitter {
+            background: #1DA1F2;
+            color: white;
+        }
+
+        .badge-linkedin {
+            background: #0077B5;
+            color: white;
+        }
+
+        .article-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .article-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .article-title {
+            font-size: 1.4em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .article-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .article-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .post-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 2px solid #e0e0e0;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 1.05em;
+        }
+
+        .confidence {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: #4ade80;
+            color: white;
+        }
+
+        .confidence.medium {
+            background: #fbbf24;
+        }
+
+        .confidence.low {
+            background: #f87171;
+        }
+
+        .source-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        .source-link:hover {
+            background: #5568d3;
+        }
+
+        .no-results {
+            background: white;
+            border-radius: 15px;
+            padding: 60px 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .no-results h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .no-results p {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 1em;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if no_results %}
+        <div class="no-results">
+            <h2>📊 No Results Yet</h2>
+            <p>{{ message }}</p>
+            <div class="code-block">
+                python main.py "asteroid mining" --simple
+            </div>
+            <p style="margin-top: 20px; color: #999;">Then refresh this page to see results</p>
+        </div>
+        {% else %}
+        <div class="header">
+            <h1>🚀 Social Agent Results</h1>
+            <div class="meta">
+                <strong>Keyword:</strong> {{ results.keyword }}<br>
+                {% if results.formatted_timestamp %}
+                <strong>Generated:</strong> {{ results.formatted_timestamp }}
+                {% endif %}
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ results.articles_processed }}</div>
+                    <div class="stat-label">Articles Processed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ results.defense_articles|length }}</div>
+                    <div class="stat-label">Defense Articles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ results.non_defense_articles|length }}</div>
+                    <div class="stat-label">Non-Defense Articles</div>
+                </div>
+            </div>
+        </div>
+
+        {% if results.defense_articles %}
+        <div class="section">
+            <h2 class="section-title">
+                🛡️ Defense Articles <span class="badge badge-twitter">Twitter Posts</span>
+            </h2>
+            {% for article in results.defense_articles %}
+            <div class="article-card">
+                <div class="article-title">{{ article.title }}</div>
+                <div class="article-meta">
+                    {% if article.authors %}
+                    <span>✍️ {{ article.authors|join(', ') }}</span>
+                    {% endif %}
+                    <span>🎯 Confidence:
+                        {% if article.confidence >= 0.8 %}
+                        <span class="confidence">{{ (article.confidence * 100)|int }}%</span>
+                        {% elif article.confidence >= 0.6 %}
+                        <span class="confidence medium">{{ (article.confidence * 100)|int }}%</span>
+                        {% else %}
+                        <span class="confidence low">{{ (article.confidence * 100)|int }}%</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% if article.reasoning %}
+                <div style="color: #666; font-style: italic; margin-bottom: 15px;">
+                    💭 {{ article.reasoning }}
+                </div>
+                {% endif %}
+                <div class="post-content">{{ article.post }}</div>
+                <a href="{{ article.url }}" target="_blank" class="source-link">📰 Read Original Article →</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if results.non_defense_articles %}
+        <div class="section">
+            <h2 class="section-title">
+                🌐 Non-Defense Articles <span class="badge badge-linkedin">LinkedIn Posts</span>
+            </h2>
+            {% for article in results.non_defense_articles %}
+            <div class="article-card">
+                <div class="article-title">{{ article.title }}</div>
+                <div class="article-meta">
+                    {% if article.authors %}
+                    <span>✍️ {{ article.authors|join(', ') }}</span>
+                    {% endif %}
+                    <span>🎯 Confidence:
+                        {% if article.confidence >= 0.8 %}
+                        <span class="confidence">{{ (article.confidence * 100)|int }}%</span>
+                        {% elif article.confidence >= 0.6 %}
+                        <span class="confidence medium">{{ (article.confidence * 100)|int }}%</span>
+                        {% else %}
+                        <span class="confidence low">{{ (article.confidence * 100)|int }}%</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% if article.reasoning %}
+                <div style="color: #666; font-style: italic; margin-bottom: 15px;">
+                    💭 {{ article.reasoning }}
+                </div>
+                {% endif %}
+                <div class="post-content">{{ article.post }}</div>
+                <a href="{{ article.url }}" target="_blank" class="source-link">📰 Read Original Article →</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+
+    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+</body>
+</html>

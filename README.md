@@ -152,6 +152,29 @@ If you set `DEFAULT_KEYWORD` in `.env`, you can run without arguments:
 python main.py
 ```
 
+### Web Viewer (New!)
+
+**View your results in a beautiful web interface!**
+
+After running the scraper, launch the web viewer to see your results in an easy-to-read format:
+
+```bash
+python web_viewer.py
+```
+
+Then open your browser to: **http://localhost:5000**
+
+The web viewer displays:
+- 📊 Statistics dashboard (articles processed, defense vs non-defense)
+- 🛡️ Defense articles with Twitter posts
+- 🌐 Non-defense articles with LinkedIn posts
+- 🎯 Confidence scores with color coding
+- 💭 AI reasoning for each classification
+- 📰 Direct links to original articles
+- 🎨 Clean, modern interface that works on mobile and desktop
+
+**Auto-refresh:** The viewer reads from `results.json`, so just run the scraper again and refresh the page to see new results!
+
 ## Output
 
 The script generates:
