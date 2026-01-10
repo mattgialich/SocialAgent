@@ -75,7 +75,7 @@ Be strict in your assessment - only classify as defense-related if the primary f
 
             # Call Claude API
             response = self.client.messages.create(
-                model="claude-3-5-sonnet-20240620",
+                model="claude-3-sonnet-20240229",
                 max_tokens=300,
                 temperature=0.3,
                 system="You are an expert analyst specializing in identifying defense and military-related content.",

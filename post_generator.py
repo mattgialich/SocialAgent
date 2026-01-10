@@ -85,7 +85,7 @@ Return ONLY the tweet text, nothing else."""
 
             # Call Claude API
             response = self.client.messages.create(
-                model="claude-3-5-sonnet-20240620",
+                model="claude-3-sonnet-20240229",
                 max_tokens=200,
                 temperature=0.7,
                 system="You are a social media expert specializing in defense and aerospace topics. Create engaging, concise Twitter posts.",
@@ -175,7 +175,7 @@ Return ONLY the LinkedIn post text, nothing else."""
 
             # Call Claude API
             response = self.client.messages.create(
-                model="claude-3-5-sonnet-20240620",
+                model="claude-3-sonnet-20240229",
                 max_tokens=1000,
                 temperature=0.7,
                 system="You are a professional content creator specializing in technology and aerospace topics for LinkedIn. Create thoughtful, engaging posts that provide value.",
